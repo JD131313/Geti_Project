@@ -1,16 +1,18 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+
+    id("com.google.gms.google-services")    //파이어베이스 플러그인
 }
 
 android {
     namespace = "com.example.getiproject"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.getiproject"
         minSdk = 26
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -59,6 +61,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("com.google.firebase:firebase-auth:22.2.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
@@ -66,4 +69,26 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    /*파이어베이스 TODO: 사용할 Firebase 제품의 종속성을 추가합니다
+     BoM을 사용할 때 Firebase 종속성에 버전을 지정하지 마십시오
+    */
+//    implementation(platform("com.google.firebase:firebase-bom:32.5.0"))
+//    implementation("com.google.firebase:firebase-analytics")
+    // 파이어베이스 Auth
+//    implementation("com.google.firebase:firebase-auth-ktx")  // bom 사용으로 버전 지정 필요 없음
+//    implementation("com.google.firebase:firebase-auth:22.2.0")
+//    implementation("com.google.android.gms:play-services-auth:20.7.0")  // 구글 로그인
+    // 파이어베이스 Firestore
+//    implementation("com.google.firebase:firebase-firestore:24.9.1")
+
+//    implementation("com.google.firebase:firebase-ml-vision:24.1.0")
+    implementation("com.google.firebase:firebase-database-ktx:20.2.2")
+    implementation("com.google.android.gms:play-services-auth:20.6.0")
+    implementation("com.google.firebase:firebase-firestore-ktx:24.7.1")
+
+    // 네비게이션
+    val nav_version = "2.5.3"
+    implementation("androidx.navigation:navigation-compose:$nav_version")
+
 }
