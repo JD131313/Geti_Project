@@ -10,7 +10,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
@@ -18,6 +17,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.getiproject.database.FirebaseAuthenticationManager
+import com.example.getiproject.screen.CommunityApp
 import com.example.getiproject.screen.Login
 import com.example.getiproject.screen.SuccessLogin
 import com.example.getiproject.ui.theme.GetiProjectTheme
@@ -25,27 +25,27 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 class MainActivity : ComponentActivity() {
 
     // 파이어베이스 로그인
-    private lateinit var auth: FirebaseAuth
     private lateinit var mAuth: FirebaseAuth
     private lateinit var googleSignInClient: GoogleSignInClient
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseApp.initializeApp(this)
+
         // 파이어베이스 로그인
         mAuth = FirebaseAuth.getInstance()
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id)) // default_web_client_id 에러 시 rebuild
+            .requestIdToken(getString(R.string.default_web_client_id)) // default_web_client_id 에러 시 rebuild, google-service 버전 4.3.13으로(4.4.0은 에러)
             .requestEmail()
             .build()
         googleSignInClient = GoogleSignIn.getClient(this, gso)
@@ -63,9 +63,9 @@ class MainActivity : ComponentActivity() {
                     val user: FirebaseUser? = mAuth.currentUser
                     val startDestination = remember {
                         if (user == null) {
-                            ScreenRoute.Login.route
+                            Screen.LoginScreen.route
                         } else {
-                            ScreenRoute.SuccessLogin.route
+                            Screen.SuccessLogin.route
                         }
                     }
                     val signInIntent = googleSignInClient.signInIntent
@@ -95,12 +95,14 @@ class MainActivity : ComponentActivity() {
                         }
 
                     NavHost(navController = navController, startDestination = startDestination) {
-                        composable(ScreenRoute.Login.route) {
+                        composable(Screen.LoginScreen.route) {
                             Login {
                                 launcher.launch(signInIntent)
                             }
                         }
-                        composable(ScreenRoute.SuccessLogin.route) { SuccessLogin(navController, onSignOutClicked = {signOut(navController)}) }
+                        composable(Screen.SuccessLogin.route) { SuccessLogin(navController, onSignOutClicked = {signOut(navController)}) }
+                        composable(Screen.CommunityScreen.route) { CommunityApp(navController) }
+
                     }
                 }
             }
@@ -122,7 +124,7 @@ class MainActivity : ComponentActivity() {
                     val currentUser = mAuth.currentUser
                     currentUser?.let {
                         navController.popBackStack()
-                    navController.navigate(ScreenRoute.SuccessLogin.route)
+                    navController.navigate(Screen.SuccessLogin.route)
                     }
                     Toast.makeText(this, "로그인 성공", Toast.LENGTH_SHORT).show()
                 } else {
@@ -143,7 +145,7 @@ class MainActivity : ComponentActivity() {
 
         // configure Google SignIn
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestIdToken(getString(R.string.default_web_client_id)) //
             .requestEmail()
             .build()
 
@@ -160,11 +162,9 @@ class MainActivity : ComponentActivity() {
                     // 삭제 실패 시 동작
                     Log.e("Firestore", "Error deleting document", e)
                 }
-            navController.navigate(ScreenRoute.Login.route)
+            navController.navigate(Screen.LoginScreen.route)
         }.addOnFailureListener {
             Toast.makeText(this, "로그아웃 실패", Toast.LENGTH_SHORT).show()
         }
     }
-
 }
-
