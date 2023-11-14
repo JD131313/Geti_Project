@@ -1,5 +1,6 @@
 package com.example.getiproject
 
+import FirebaseDataManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -17,8 +18,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.getiproject.database.FirebaseAuthenticationManager
-import com.example.getiproject.screen.CommunityApp
+import com.example.getiproject.screen.CommunityHome
+import com.example.getiproject.screen.CreatePostScreen
 import com.example.getiproject.screen.Login
+import com.example.getiproject.screen.PostDetail
 import com.example.getiproject.screen.SuccessLogin
 import com.example.getiproject.ui.theme.GetiProjectTheme
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -37,33 +40,34 @@ class MainActivity : ComponentActivity() {
     // 파이어베이스 로그인
     private lateinit var mAuth: FirebaseAuth
     private lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var firebaseDataManager: FirebaseDataManager // Add this line
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
 
-        // 파이어베이스 로그인
         mAuth = FirebaseAuth.getInstance()
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id)) // default_web_client_id 에러 시 rebuild, google-service 버전 4.3.13으로(4.4.0은 에러)
+            .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
+        // Initialize FirebaseDataManager
+        firebaseDataManager = FirebaseDataManager()
+
         setContent {
             GetiProjectTheme {
-
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val navController = rememberNavController() // navigation
+                    val navController = rememberNavController()
 
                     val user: FirebaseUser? = mAuth.currentUser
                     val startDestination = remember {
                         if (user == null) {
-                            Screen.LoginScreen.route
+                            Screen.Login.route
                         } else {
                             Screen.SuccessLogin.route
                         }
@@ -73,12 +77,10 @@ class MainActivity : ComponentActivity() {
                     val launcher =
                         rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult()) { result ->
                             val data = result.data
-                            // result returned from launching the intent from GoogleSignInApi.getSignInIntent()
                             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
                             val exception = task.exception
                             if (task.isSuccessful) {
                                 try {
-                                    // Google SignIn was successful, authenticate with firebase
                                     val account = task.getResult(ApiException::class.java)!!
                                     firebaseAuthWithGoogle(
                                         account.idToken!!,
@@ -86,7 +88,6 @@ class MainActivity : ComponentActivity() {
                                         navController = navController
                                     )
                                 } catch (e: Exception) {
-                                    // Google SignIn failed
                                     Log.d("SignIn", "로그인 실패")
                                 }
                             } else {
@@ -95,18 +96,29 @@ class MainActivity : ComponentActivity() {
                         }
 
                     NavHost(navController = navController, startDestination = startDestination) {
-                        composable(Screen.LoginScreen.route) {
+                        composable(Screen.Login.route) {
                             Login {
                                 launcher.launch(signInIntent)
                             }
                         }
-                        composable(Screen.SuccessLogin.route) { SuccessLogin(navController, onSignOutClicked = {signOut(navController)}) }
-                        composable(Screen.CommunityScreen.route) { CommunityApp(navController) }
+                        composable(Screen.SuccessLogin.route) { SuccessLogin(navController, onSignOutClicked = { signOut(navController) }) }
+                        composable(Screen.CommunityHome.route) { CommunityHome(navController) }
+                        composable(route = "${Screen.PostDetail.route}/{postId}") { backStackEntry ->
+                            val postId = backStackEntry.arguments?.getString("postId")
+                            if (::firebaseDataManager.isInitialized) { // Check if initialized
+                                PostDetail(navController, postId ?: "", firebaseDataManager)
+                            } else {
+                                // Handle the case where firebaseDataManager is not initialized yet
+                                Log.e("MainActivity", "FirebaseDataManager is not initialized")
+                            }
+                        }
+                        composable(Screen.CreatePostScreen.route) { CreatePostScreen(navController) }
 
                     }
                 }
             }
         }
+
 
 
     }
@@ -162,7 +174,7 @@ class MainActivity : ComponentActivity() {
                     // 삭제 실패 시 동작
                     Log.e("Firestore", "Error deleting document", e)
                 }
-            navController.navigate(Screen.LoginScreen.route)
+            navController.navigate(Screen.Login.route)
         }.addOnFailureListener {
             Toast.makeText(this, "로그아웃 실패", Toast.LENGTH_SHORT).show()
         }

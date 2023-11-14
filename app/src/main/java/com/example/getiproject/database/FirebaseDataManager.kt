@@ -1,5 +1,6 @@
 import android.util.Log
 import com.example.getiproject.screen.Post
+import com.google.android.gms.tasks.Task
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -10,48 +11,21 @@ import com.google.firebase.ktx.Firebase
 // FirebaseDataManager.kt
 class FirebaseDataManager {
 
-    private val db = FirebaseDatabase.getInstance()
-    private val postsRef = db.getReference("posts")
+    val db = FirebaseDatabase.getInstance("https://geti-project-default-rtdb.asia-southeast1.firebasedatabase.app/")
+    val postsRef = db.getReference("posts")
 
-    fun getRecentPosts(callback: (List<Post>) -> Unit) {
-        // 최근 게시글을 가져오는 로직
-        postsRef.orderByChild("timestamp")
-            .limitToLast(10)
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val posts = snapshot.children.mapNotNull { it.getValue(Post::class.java) }
-                    callback(posts)
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Log.e("FirebaseDataManager", "Error getting recent posts", error.toException())
-                    callback(emptyList())
-                }
-            })
+    fun getPost(postId: String): Task<DataSnapshot> {
+        // Assuming postsRef is your DatabaseReference to the "posts" node
+        return postsRef.child(postId).get()
     }
 
-    fun getPost(postId: String, callback: (Post?) -> Unit) {
-        // 특정 게시글을 가져오는 로직
-        postsRef.child(postId)
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val post = snapshot.getValue(Post::class.java)
-                    callback(post)
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Log.e("FirebaseDataManager", "Error getting post $postId", error.toException())
-                    callback(null)
-                }
-            })
-    }
-
-    fun createPost(post: Post, callback: () -> Unit) {
+    fun createPost(post: Post) {
         // 새로운 게시글을 생성하는 로직
         val postId = postsRef.push().key
+//        newPosttRef.setValue(post)
         postId?.let {
             post.postId = it
-            postsRef.child(it).setValue(post).addOnCompleteListener { callback() }
+            postsRef.child(it).setValue(post).addOnCompleteListener {}
         }
     }
 

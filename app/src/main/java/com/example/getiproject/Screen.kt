@@ -2,9 +2,11 @@ package com.example.getiproject
 
 sealed class Screen(val route : String) {
     object SuccessLogin : Screen("successLogin")
-    object LoginScreen : Screen("login")
-    object CommunityScreen : Screen("community")
-    object PostDetailScreen : Screen("postDetailScreen")
+    object Login : Screen("login")
+    object CommunityHome : Screen("community")
+    object PostDetail : Screen("postDetailScreen")
     object CreatePostScreen : Screen("createPostScreen")
+    object UpdatePostScreen : Screen("updatepostscreen")
+
 
 }
