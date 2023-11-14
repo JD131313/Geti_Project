@@ -21,9 +21,9 @@ class FirebaseDataManager {
     }
 
     fun createPost(post: Post) {
-        // 새로운 게시글을 생성하는 로직
+        // Initialize hits to 0 when creating a new post
+        post.hits = 0
         val postId = postsRef.push().key
-//        newPosttRef.setValue(post)
         postId?.let {
             post.postId = it
             postsRef.child(it).setValue(post).addOnCompleteListener {}
@@ -31,9 +31,15 @@ class FirebaseDataManager {
     }
 
     fun updatePost(post: Post) {
-        // Firebase에서 게시글을 업데이트하는 로직
-        postsRef.child(post.postId)
-            .setValue(post)
+        // Fetch the existing post to preserve hits count
+        getPost(post.postId).addOnSuccessListener { snapshot ->
+            val existingPost = snapshot.getValue(Post::class.java)
+            existingPost?.let {
+                // Preserve the original hits count
+                post.hits = it.hits
+                postsRef.child(post.postId).setValue(post)
+            }
+        }
     }
 
     fun deletePost(postId: String) {
@@ -41,4 +47,10 @@ class FirebaseDataManager {
         postsRef.child(postId)
             .removeValue()
     }
+
+    // Inside FirebaseDataManager class
+    fun updatePostHits(postId: String, updatedHits: Int) {
+        postsRef.child(postId).child("hits").setValue(updatedHits)
+    }
+
 }
