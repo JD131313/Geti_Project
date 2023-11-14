@@ -6,7 +6,7 @@ sealed class Screen(val route : String) {
     object CommunityHome : Screen("community")
     object PostDetail : Screen("postDetailScreen")
     object CreatePostScreen : Screen("createPostScreen")
-    object UpdatePostScreen : Screen("updatepostscreen")
+    object EditPostScreen : Screen("updatepostscreen")
 
 
 }

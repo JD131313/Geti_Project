@@ -1,7 +1,11 @@
 package com.example.getiproject.screen
 
 import FirebaseDataManager
+import android.net.Uri
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -26,6 +30,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,8 +41,14 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.FirebaseStorage
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.UUID
+import androidx.compose.foundation.Image
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
+
 
 @Composable
 fun CommunityHome(navController: NavController) {
@@ -86,7 +97,8 @@ fun CommunityHome(navController: NavController) {
                         .limitToLast(numberOfPostsToFetch)
                         .addValueEventListener(object : ValueEventListener {
                             override fun onDataChange(snapshot: DataSnapshot) {
-                                val postList = snapshot.children.mapNotNull { it.getValue(Post::class.java) }
+                                val postList =
+                                    snapshot.children.mapNotNull { it.getValue(Post::class.java) }
                                 // Update the state with the retrieved posts
                                 postsState = postList
                             }
@@ -111,19 +123,28 @@ fun CommunityHome(navController: NavController) {
 
 @Composable
 fun PostItem(post: Post, onPostClick: () -> Unit) {
-    Row(
+    Box(
         modifier = Modifier
             .clickable { onPostClick.invoke() }
-            .padding(bottom = 5.dp)
     ) {
-        Text(text = post.title)
-        Text(text = post.author)
-        Text(text = post.timestamp)
+        Column {
+            Text(text = post.title)
+            Row {
+                Text(text = post.author)
+                Text(text = post.timestamp)
+            }
+        }
+
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
-fun PostDetail(navController: NavController, postId: String, firebaseDataManager: FirebaseDataManager) {
+fun PostDetail(
+    navController: NavController,
+    postId: String,
+    firebaseDataManager: FirebaseDataManager
+) {
     var post by remember { mutableStateOf<Post?>(null) }
 
     LaunchedEffect(postId) {
@@ -146,15 +167,138 @@ fun PostDetail(navController: NavController, postId: String, firebaseDataManager
             Text(text = actualPost.title, fontWeight = FontWeight.Bold, fontSize = 20.sp)
             Text(text = actualPost.author)
             Text(text = actualPost.timestamp)
+
+            // Display the image if imageUrl is not null
+            actualPost.imageUrl?.let { imageUrl ->
+                val imageModifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .padding(8.dp)
+                    .clip(shape = RoundedCornerShape(4.dp))
+
+                Image(
+                    painter = rememberImagePainter(data = imageUrl),
+                    contentDescription = null,
+                    modifier = imageModifier
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
             Text(text = actualPost.content)
+
+            Button(onClick = {
+                // Navigate to the EditPostScreen when the Edit button is clicked
+                navController.navigate(Screen.EditPostScreen.route + "/$postId")
+            }) {
+                Text(text = "수정")
+            }
         }
     }
-    Button(onClick = { /*TODO*/ }) {
-        Text(text = "수정")
+
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditPostScreen(
+    navController: NavController,
+    postId: String,
+    firebaseDataManager: FirebaseDataManager
+) {
+    // Similar to CreatePostScreen, you can use the provided postId to fetch the post details
+    // and populate the fields for editing.
+    // You can use a similar approach as in PostDetail composable to fetch the post details.
+
+    // Use a similar approach as in CreatePostScreen to fetch the post details using postId
+    // and populate the title and content fields for editing.
+
+    var title by remember { mutableStateOf("") }
+    var content by remember { mutableStateOf("") }
+    var retrievedPost: Post? by remember { mutableStateOf(null) }
+
+    // Fetch post details using postId and populate the fields
+    LaunchedEffect(postId) {
+        firebaseDataManager.getPost(postId).addOnSuccessListener { snapshot ->
+            retrievedPost = snapshot.getValue(Post::class.java)
+            if (retrievedPost != null) {
+                title = retrievedPost!!.title
+                content = retrievedPost!!.content
+            }
+        }.addOnFailureListener { e ->
+            // Handle failure if needed
+            Log.e("EditPostScreen", "Error fetching post details: ${e.message}")
+        }
     }
-    Button(onClick = { /*TODO*/ }) {
-        Text(text = "삭제")
+
+    // The rest of the code for EditPostScreen is similar to CreatePostScreen,
+    // where you can have TextFields for title and content, and a Button to save the changes.
+
+    // Use the same logic as CreatePostScreen with some modifications for updating the post.
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        // Title input field
+        TextField(
+            value = title,
+            onValueChange = { title = it },
+            label = { Text("제목") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        )
+
+        // Content input field
+        TextField(
+            value = content,
+            onValueChange = { content = it },
+            label = { Text("내용") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .height(200.dp)
+        )
+        Row {
+            Button(
+                onClick = {
+                    // Delete the existing post
+                    firebaseDataManager.deletePost(postId)
+
+                    // Navigate back to the previous screen after deleting
+                    navController.navigate(Screen.CommunityHome.route)
+                },
+            ) {
+                Text(text = "삭제")
+            }
+            Button(
+                onClick = {
+                    // Update the existing post with the new title and content
+                    val updatedPost = Post(
+                        postId = postId,
+                        title = title,
+                        content = content,
+                        author = retrievedPost?.author
+                            ?: "", // Keep the original author or set a default value
+                        imageUrl = retrievedPost?.imageUrl, // Keep the original imageUrl
+                        timestamp = retrievedPost?.timestamp
+                            ?: "" // Keep the original timestamp or set a default value
+                    )
+
+
+                    // Use the FirebaseDataManager to update the post
+                    firebaseDataManager.updatePost(updatedPost)
+
+                    // Navigate back to the post detail screen after updating
+                    navController.popBackStack()
+                },
+            ) {
+                Text(text = "저장")
+            }
+
+        }
+        // Save changes button
     }
 }
 
@@ -205,28 +349,80 @@ fun CreatePostScreen(navController: NavController) {
                 .height(200.dp)
         )
 
-        // 저장 버튼
-        Button(
-            onClick = {
-//                 새로운 게시글 생성
-                val newPost = Post(
-                    postId = "", // postId는 Firebase에서 생성될 것이므로 일단 빈 문자열로 둡니다.
-                    title = title,
-                    content = content,
-                    author = author,
-                    imageUrl = null, // 이미지 URL은 여기서는 null로 처리했습니다.
-                    timestamp = formattedTimestamp
+        var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+// Activity Result API for getting content (image) from the gallery
+        val getContent =
+            rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+                uri?.let { selectedImageUri = it }
+            }
+        Column {
+            Button(
+                onClick = {
+                    getContent.launch("image/*")
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+                Text(text = "이미지 선택")
+            }
+
+            // 저장 버튼
+            selectedImageUri?.let { uri ->
+                // Display the selected image
+                Image(
+                    painter = rememberImagePainter(data = uri),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .padding(8.dp)
+                        .clip(shape = RoundedCornerShape(4.dp))
                 )
 
-                firebaseDataManager.createPost(newPost)
-//                navController.navigate(Screen.CommunityHome.route)
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-        ) {
-            Text(text = "저장")
+                // Add the selected image to Firebase Storage when the user clicks the save button
+                Button(
+                    onClick = {
+                        val imageName = "${UUID.randomUUID()}.jpg"
+                        val storageRef =
+                            FirebaseStorage.getInstance().reference.child("images/$imageName")
+
+                        // Upload the image
+                        storageRef.putFile(uri)
+                            .addOnSuccessListener {
+                                // Get the download URL for the image
+                                storageRef.downloadUrl.addOnSuccessListener { imageUrl ->
+                                    // Create a new post with the image URL
+                                    val newPost = Post(
+                                        postId = "",
+                                        title = title,
+                                        content = content,
+                                        author = author,
+                                        imageUrl = imageUrl.toString(),
+                                        timestamp = formattedTimestamp
+                                    )
+
+                                    // Create the post in Firebase
+                                    firebaseDataManager.createPost(newPost)
+                                    navController.navigate(Screen.CommunityHome.route)
+                                }
+                            }
+                            .addOnFailureListener { exception ->
+                                // Handle errors
+                                // You might want to show a Snackbar or Toast with an error message
+                            }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    Text(text = "저장")
+                }
+            }
         }
+
+
     }
 }
 

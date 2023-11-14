@@ -1,5 +1,6 @@
 import android.util.Log
 import com.example.getiproject.screen.Post
+//import com.example.getiproject.screen.Post
 import com.google.android.gms.tasks.Task
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -29,17 +30,15 @@ class FirebaseDataManager {
         }
     }
 
-    fun updatePost(post: Post, callback: () -> Unit) {
+    fun updatePost(post: Post) {
         // Firebase에서 게시글을 업데이트하는 로직
         postsRef.child(post.postId)
             .setValue(post)
-            .addOnCompleteListener { callback() }
     }
 
-    fun deletePost(postId: String, callback: () -> Unit) {
+    fun deletePost(postId: String) {
         // Firebase에서 게시글을 삭제하는 로직
         postsRef.child(postId)
             .removeValue()
-            .addOnCompleteListener { callback() }
     }
 }

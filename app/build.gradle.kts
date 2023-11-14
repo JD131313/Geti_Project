@@ -69,6 +69,9 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
+    implementation ("io.coil-kt:coil-compose:1.3.0")
+
+
     /*파이어베이스 TODO: 사용할 Firebase 제품의 종속성을 추가합니다
      BoM을 사용할 때 Firebase 종속성에 버전을 지정하지 마십시오
     */
@@ -82,12 +85,10 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore:24.9.1")
     // 파이어베이스 Realtime
     implementation("com.google.firebase:firebase-database-ktx:20.3.0")
+    // 파이어베이스 storage
+    implementation("com.google.firebase:firebase-storage")
 
 
-//    implementation("com.google.firebase:firebase-ml-vision:24.1.0")
-
-//    implementation("com.google.android.gms:play-services-auth:20.6.0")
-//    implementation("com.google.firebase:firebase-firestore-ktx:24.7.1")
 
     // 네비게이션
     val nav_version = "2.5.3"

@@ -1,6 +1,7 @@
 package com.example.getiproject
 
 import FirebaseDataManager
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -11,7 +12,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -20,6 +24,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.getiproject.database.FirebaseAuthenticationManager
 import com.example.getiproject.screen.CommunityHome
 import com.example.getiproject.screen.CreatePostScreen
+import com.example.getiproject.screen.EditPostScreen
 import com.example.getiproject.screen.Login
 import com.example.getiproject.screen.PostDetail
 import com.example.getiproject.screen.SuccessLogin
@@ -56,12 +61,14 @@ class MainActivity : ComponentActivity() {
         // Initialize FirebaseDataManager
         firebaseDataManager = FirebaseDataManager()
 
+
         setContent {
             GetiProjectTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+
                     val navController = rememberNavController()
 
                     val user: FirebaseUser? = mAuth.currentUser
@@ -113,7 +120,17 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         composable(Screen.CreatePostScreen.route) { CreatePostScreen(navController) }
+                        composable(Screen.EditPostScreen.route + "/{postId}") { backStackEntry ->
+                            val postId = backStackEntry.arguments?.getString("postId")
+                            val firebaseDataManager = FirebaseDataManager() // 또는 사용자 정의된 로직으로 FirebaseDataManager를 초기화
 
+                            if (postId != null) {
+                                EditPostScreen(navController, postId, firebaseDataManager)
+                            } else {
+                                // postId가 없을 때의 처리를 추가할 수 있습니다.
+                                // 예를 들어, 에러 처리 또는 다른 화면으로 이동하는 등의 로직을 추가할 수 있습니다.
+                            }
+                        }
                     }
                 }
             }
