@@ -1,15 +1,9 @@
 import android.util.Log
-import com.example.getiproject.screen.Post
-//import com.example.getiproject.screen.Post
+import com.example.getiproject.data.Post
 import com.google.android.gms.tasks.Task
 import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
 
-// FirebaseDataManager.kt
 class FirebaseDataManager {
 
     val db = FirebaseDatabase.getInstance("https://geti-project-default-rtdb.asia-southeast1.firebasedatabase.app/")
