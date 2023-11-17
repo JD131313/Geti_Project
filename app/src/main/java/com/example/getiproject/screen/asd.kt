@@ -63,6 +63,52 @@ fun Asd(navController: NavController) {
     )
 }
 
+//@Composable
+//fun UserInfo(navController: NavController) {
+//
+//}
+
+//CircleImage(
+//modifier = Modifier
+//.padding(8.dp)
+//.align(Alignment.CenterHorizontally),
+//contentDescription = "Profile Picture",
+//user = currentUser
+//)
+//
+//@Composable
+//fun CircleImage(
+//    modifier: Modifier = Modifier,
+//    contentDescription: String? = null,
+//    user: FirebaseUser?,
+//) {
+//    val placeholderColor = Color.Gray
+//
+//    // Use the Coil library to load and display the image from the URL
+//    DisposableEffect(user?.photoUrl) {
+//        onDispose {} // No-op
+//
+//        // Additional cleanup logic can be added here if needed
+//    }
+//
+//    Image(
+//        painter = rememberImagePainter(
+//            data = user?.photoUrl,
+//            builder = {
+//                // You can add additional parameters for image loading here
+//                crossfade(true)
+//            }
+//        ),
+//        contentDescription = contentDescription,
+//        modifier = modifier
+//            .size(120.dp)
+//            .clip(CircleShape)
+//            .background(MaterialTheme.colorScheme.primary)
+//            .border(2.dp, MaterialTheme.colorScheme.onPrimary, CircleShape),
+//        contentScale = ContentScale.Crop
+//    )
+//}
+
 //
 //@OptIn(ExperimentalMaterial3Api::class)
 //@Composable

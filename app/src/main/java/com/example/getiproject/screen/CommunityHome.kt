@@ -13,10 +13,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -47,6 +49,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
+import coil.transform.RoundedCornersTransformation
 import com.example.getiproject.R
 import com.example.getiproject.Screen
 import com.example.getiproject.data.Post
@@ -120,15 +125,14 @@ fun CommunityHome(navController: NavController) {
     )
     Box {
         Column {
-
             // Search input field
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                label = { Text("검색어를 입력하세요") },
+//                label = { Text("검색어를 입력하세요") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
+                    .height(120.dp)
                     .padding(top = 70.dp, start = 30.dp, end = 30.dp)
                     .background(color = Color.White, shape = RoundedCornerShape(30.dp))
                     .clip(RoundedCornerShape(30.dp)),
@@ -151,7 +155,7 @@ fun CommunityHome(navController: NavController) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp)
+                    .padding(8.dp),
             ) {
                 RadioGroupOptions(
                     options = listOf("제목", "내용", "제목 및 내용"),
@@ -173,14 +177,20 @@ fun CommunityHome(navController: NavController) {
                     }
                 )
             }
-            Box(modifier = Modifier
-                .fillMaxWidth()
-                .height(500.dp)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(500.dp)
+            ) {
                 LazyColumn {
                     items(postsState.filter {
                         when (searchType) {
                             SearchType.TITLE -> it.title.contains(searchQuery, ignoreCase = true)
-                            SearchType.CONTENT -> it.content.contains(searchQuery, ignoreCase = true)
+                            SearchType.CONTENT -> it.content.contains(
+                                searchQuery,
+                                ignoreCase = true
+                            )
+
                             SearchType.BOTH ->
                                 it.title.contains(searchQuery, ignoreCase = true) ||
                                         it.content.contains(searchQuery, ignoreCase = true)
@@ -306,6 +316,7 @@ fun RadioGroupOptions(
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun PostItem(post: Post, firebaseDataManager: FirebaseDataManager, onPostClick: () -> Unit) {
     Box(
@@ -345,7 +356,31 @@ fun PostItem(post: Post, firebaseDataManager: FirebaseDataManager, onPostClick: 
                     text = post.title
                 )
             }
-
+            LazyRow {
+                items(post.imageUrls.orEmpty()) { imageUrl ->
+                    Image(
+                        painter = rememberImagePainter(
+                            data = imageUrl,
+                            builder = {
+                                transformations(RoundedCornersTransformation(4f))
+                            }
+                        ),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(100.dp) // Adjust the size as needed
+                            .padding(4.dp) // Add padding between images
+                            .clip(shape = RoundedCornerShape(4.dp))
+                    )
+                }
+            }
+            Text(
+                text = post.content.take(30),
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .padding(10.dp)
+                    .fillMaxWidth()
+                    .heightIn(min = 30.dp) // Limit the height to show only one line
+            )
             Row {
                 Spacer(modifier = Modifier.padding(start = 10.dp))
                 Text(fontSize = 13.sp, text = post.author)

@@ -3,6 +3,7 @@ package com.example.getiproject.screen
 import FirebaseDataManager
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -26,10 +29,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.annotation.ExperimentalCoilApi
 import com.example.getiproject.Screen
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -42,7 +47,7 @@ import com.example.getiproject.data.Post
 
 
 // PostDetail 화면에서 댓글을 수정하고 등록할 수 있도록 수정
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalCoilApi::class)
 @Composable
 fun PostDetail(
     navController: NavController,
@@ -86,19 +91,18 @@ fun PostDetail(
             Text(text = actualPost.author)
             Text(text = actualPost.timestamp)
 
-            // Display the image if imageUrl is not null
-            actualPost.imageUrls?.let { imageUrl ->
-                val imageModifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .padding(8.dp)
-                    .clip(shape = RoundedCornerShape(4.dp))
-
-                Image(
-                    painter = rememberImagePainter(data = imageUrl),
-                    contentDescription = null,
-                    modifier = imageModifier
-                )
+            // Display all images
+            actualPost.imageUrls?.let { imageUrls ->
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .padding(8.dp)
+                ) {
+                    items(imageUrls) { imageUrl ->
+                        ImageItem(imageUrl = imageUrl)
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -168,6 +172,27 @@ fun PostDetail(
             }
         }
     }
+}
+
+@OptIn(ExperimentalCoilApi::class)
+@Composable
+fun ImageItem(imageUrl: Any) {
+    val context = LocalContext.current
+
+    val imageModifier = Modifier
+        .width(200.dp)
+        .height(200.dp)
+        .padding(8.dp)
+        .clip(shape = RoundedCornerShape(4.dp))
+        .clickable {
+
+        }
+
+    Image(
+        painter = rememberImagePainter(data = imageUrl),
+        contentDescription = null,
+        modifier = imageModifier
+    )
 }
 
 // 댓글 섹션을 표시하는 컴포저블 추가

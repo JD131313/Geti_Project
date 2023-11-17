@@ -24,7 +24,11 @@ import com.example.getiproject.screen.CreatePostScreen
 import com.example.getiproject.screen.EditPostScreen
 import com.example.getiproject.screen.Login
 import com.example.getiproject.screen.PostDetail
+import com.example.getiproject.screen.Practice
+//import com.example.getiproject.screen.PracticePreview
 import com.example.getiproject.screen.SuccessLogin
+import com.example.getiproject.screen.UserInfo
+//import com.example.getiproject.screen.UserInfo
 import com.example.getiproject.ui.theme.GetiProjectTheme
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -105,7 +109,11 @@ class MainActivity : ComponentActivity() {
                                 launcher.launch(signInIntent)
                             }
                         }
-                        composable(Screen.SuccessLogin.route) { SuccessLogin(navController, onSignOutClicked = { signOut(navController) }) }
+                        composable(Screen.SuccessLogin.route) {
+                            SuccessLogin(
+                                navController,
+                                onSignOutClicked = { signOut(navController) })
+                        }
                         composable(Screen.CommunityHome.route) { CommunityHome(navController) }
                         composable(route = "${Screen.PostDetail.route}/{postId}") { backStackEntry ->
                             val postId = backStackEntry.arguments?.getString("postId")
@@ -119,7 +127,8 @@ class MainActivity : ComponentActivity() {
                         composable(Screen.CreatePostScreen.route) { CreatePostScreen(navController) }
                         composable(Screen.EditPostScreen.route + "/{postId}") { backStackEntry ->
                             val postId = backStackEntry.arguments?.getString("postId")
-                            val firebaseDataManager = FirebaseDataManager() // 또는 사용자 정의된 로직으로 FirebaseDataManager를 초기화
+                            val firebaseDataManager =
+                                FirebaseDataManager() // 또는 사용자 정의된 로직으로 FirebaseDataManager를 초기화
 
                             if (postId != null) {
                                 EditPostScreen(navController, postId, firebaseDataManager)
@@ -129,12 +138,13 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                         composable(Screen.Asd.route) { Asd(navController) }
+                        composable(Screen.UserInfo.route) { UserInfo(navController)}
+                        composable(Screen.Practice.route) { Practice(navController) }
 
                     }
                 }
             }
         }
-
 
 
     }
@@ -151,16 +161,51 @@ class MainActivity : ComponentActivity() {
                     // SignIn Successful
                     val currentUser = mAuth.currentUser
                     currentUser?.let {
-                        navController.popBackStack()
-                    navController.navigate(Screen.SuccessLogin.route)
+                        // Check if the user document already exists in Firestore
+                        val db = Firebase.firestore
+                        val uid = it.uid
+                        val userRef = db.collection("users").document(uid)
+
+                        userRef.get()
+                            .addOnSuccessListener { document ->
+                                if (document.exists()) {
+                                    // User document already exists, no need to save again
+                                    Log.d("Firestore", "User document already exists")
+                                } else {
+                                    // User document doesn't exist, save the data
+                                    val googleSignInAccount = GoogleSignIn.getLastSignedInAccount(this)
+                                    val profileImageUri = googleSignInAccount?.photoUrl
+
+                                    val user = hashMapOf(
+                                        "email" to it.email,
+                                        "displayName" to it.displayName,
+                                        "photoUrl" to profileImageUri.toString(), // Add the profile image URL
+                                        // Add other fields as needed
+                                    )
+
+                                    userRef.set(user)
+                                        .addOnSuccessListener {
+                                            Log.d("Firestore", "User document successfully written!")
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Log.e("Firestore", "Error writing document", e)
+                                        }
+                                }
+
+                                navController.popBackStack()
+                                navController.navigate(Screen.SuccessLogin.route)
+                            }
+                            .addOnFailureListener { e ->
+                                Log.e("Firestore", "Error checking document existence", e)
+                            }
                     }
                     Toast.makeText(this, "로그인 성공", Toast.LENGTH_SHORT).show()
                 } else {
-
                     Toast.makeText(this, "로그인 실패", Toast.LENGTH_SHORT).show()
                 }
             }
     }
+
     private fun signOut(navController: NavController) {
         val db = Firebase.firestore
         val authManager = FirebaseAuthenticationManager()
@@ -173,7 +218,7 @@ class MainActivity : ComponentActivity() {
 
         // configure Google SignIn
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id)) //
+            .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
 
@@ -182,14 +227,6 @@ class MainActivity : ComponentActivity() {
         // Sign Out of all accounts
         mAuth.signOut()
         googleSignInClient.signOut().addOnSuccessListener {
-            docRef?.delete()
-                ?.addOnSuccessListener {
-                    Toast.makeText(this, "로그아웃 성공", Toast.LENGTH_SHORT).show()
-                }
-                ?.addOnFailureListener { e ->
-                    // 삭제 실패 시 동작
-                    Log.e("Firestore", "Error deleting document", e)
-                }
             navController.navigate(Screen.Login.route)
         }.addOnFailureListener {
             Toast.makeText(this, "로그아웃 실패", Toast.LENGTH_SHORT).show()
