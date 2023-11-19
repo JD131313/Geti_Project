@@ -16,3 +16,11 @@ data class Comment(
     val content: String = "",
     val timestamp: String = ""
 )
+
+enum class SearchType {
+    TITLE,
+    CONTENT,
+    AUTHOR,  // Add a new case for author
+    BOTH
+}
+

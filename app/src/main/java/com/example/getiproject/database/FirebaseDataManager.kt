@@ -1,3 +1,5 @@
+package com.example.getiproject.database
+
 import android.util.Log
 import com.example.getiproject.data.Post
 import com.google.android.gms.tasks.Task
@@ -8,7 +10,6 @@ class FirebaseDataManager {
 
     val db = FirebaseDatabase.getInstance("https://geti-project-default-rtdb.asia-southeast1.firebasedatabase.app/")
     val postsRef = db.getReference("posts")
-
     fun getPost(postId: String): Task<DataSnapshot> {
         // Assuming postsRef is your DatabaseReference to the "posts" node
         return postsRef.child(postId).get()
@@ -42,7 +43,7 @@ class FirebaseDataManager {
             .removeValue()
     }
 
-    // Inside FirebaseDataManager class
+    // Inside com.example.getiproject.database.FirebaseDataManager class
     fun updatePostHits(postId: String, updatedHits: Int) {
         postsRef.child(postId).child("hits").setValue(updatedHits)
     }

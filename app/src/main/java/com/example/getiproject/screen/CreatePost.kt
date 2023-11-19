@@ -1,10 +1,11 @@
 package com.example.getiproject.screen
 
-import FirebaseDataManager
+import com.example.getiproject.database.FirebaseDataManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,18 +18,23 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import com.example.getiproject.Screen
+import com.example.getiproject.StrayImage
+import com.example.getiproject.TopImage
 import com.example.getiproject.data.Post
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.storage.FirebaseStorage
@@ -43,10 +49,9 @@ fun CreatePostScreen(navController: NavController) {
     var content by remember { mutableStateOf("") }
     var selectedImageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
 
-    // FirebaseDataManager().createPost(post)를 사용하여 새로운 게시글 생성
+    // com.example.getiproject.database.FirebaseDataManager().createPost(post)를 사용하여 새로운 게시글 생성
     val firebaseDataManager = FirebaseDataManager()
 
-    // TODO: 구글 로그인을 통해 사용자 정보를 가져오는 로직이 필요할 수 있습니다.
     // 예를 들어, FirebaseAuth.getInstance().currentUser를 사용하여 현재 로그인한 사용자 정보를 가져올 수 있습니다.
     val currentUser = FirebaseAuth.getInstance().currentUser
     val author = currentUser?.displayName ?: "Unknown"
@@ -65,66 +70,69 @@ fun CreatePostScreen(navController: NavController) {
                 selectedImageUris = it
             }
         }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // 제목 입력칸
-        TextField(
-            value = title,
-            onValueChange = { title = it },
-            label = { Text("제목") },
+    TopImage()
+    Column {
+        StrayImage()
+        LazyColumn(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-        )
-
-        // 내용 입력칸
-        TextField(
-            value = content,
-            onValueChange = { content = it },
-            label = { Text("내용") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-                .height(200.dp)
-        )
-
-        // 이미지 선택 버튼
-        Button(
-            onClick = {
-                // Use the activity result API to get content (images) from the gallery
-                getMultipleContents.launch("image/*")
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
+                .fillMaxSize()
+                .padding(16.dp, bottom = 60.dp)
         ) {
-            Text(text = "이미지 선택")
-        }
-        Box(modifier = Modifier.height(300.dp)) {
-            LazyColumn {
-                item {
-                    selectedImageUris.forEach { uri ->
-                        Image(
-                            painter = rememberImagePainter(data = uri),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                                .padding(8.dp)
-                                .clip(shape = RoundedCornerShape(4.dp))
-                        )
-                    }
+            item {
+                // 제목 입력칸
+                TextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("제목") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp, top = 100.dp),
+                    colors = TextFieldDefaults.textFieldColors(
+                        containerColor = Color(0xFF66BB6A).copy(alpha = 0.1f))
+                )
 
+                // 내용 입력칸
+                TextField(
+                    value = content,
+                    onValueChange = { content = it },
+                    label = { Text("내용") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .height(200.dp),
+                    colors = TextFieldDefaults.textFieldColors(
+                        containerColor = Color(0xFF66BB6A).copy(alpha = 0.1f))
+                )
+
+                // 이미지 선택 버튼
+                Button(
+                    onClick = {
+                        // Use the activity result API to get content (images) from the gallery
+                        getMultipleContents.launch("image/*")
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    Text(text = "이미지 선택")
+                }
+
+                selectedImageUris.forEach { uri ->
+                    Image(
+                        painter = rememberImagePainter(data = uri),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .padding(8.dp)
+                            .clip(shape = RoundedCornerShape(4.dp))
+                    )
                 }
             }
         }
+    }
 
-        // Display the selected images if available
-
+    Box(modifier = Modifier.fillMaxSize(),contentAlignment = Alignment.BottomCenter) {
         Button(
             onClick = {
                 // Your save logic here, whether images are selected or not
@@ -190,5 +198,7 @@ fun CreatePostScreen(navController: NavController) {
         ) {
             Text(text = "저장")
         }
+
     }
 }
+

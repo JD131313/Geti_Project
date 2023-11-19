@@ -7,9 +7,7 @@ sealed class Screen(val route: String) {
     object PostDetail : Screen("postDetailScreen")
     object CreatePostScreen : Screen("createPostScreen")
     object EditPostScreen : Screen("updatepostscreen")
-    object Asd : Screen("asd")
     object UserInfo : Screen("userinfo")
 
-    object Practice : Screen("practicePreview")
 
 }

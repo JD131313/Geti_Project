@@ -1,6 +1,6 @@
 package com.example.getiproject
 
-import FirebaseDataManager
+import com.example.getiproject.database.FirebaseDataManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -18,17 +18,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.getiproject.database.FirebaseAuthenticationManager
-import com.example.getiproject.screen.Asd
 import com.example.getiproject.screen.CommunityHome
 import com.example.getiproject.screen.CreatePostScreen
 import com.example.getiproject.screen.EditPostScreen
 import com.example.getiproject.screen.Login
 import com.example.getiproject.screen.PostDetail
-import com.example.getiproject.screen.Practice
-//import com.example.getiproject.screen.PracticePreview
 import com.example.getiproject.screen.SuccessLogin
 import com.example.getiproject.screen.UserInfo
-//import com.example.getiproject.screen.UserInfo
 import com.example.getiproject.ui.theme.GetiProjectTheme
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -59,7 +55,7 @@ class MainActivity : ComponentActivity() {
             .build()
         googleSignInClient = GoogleSignIn.getClient(this, gso)
 
-        // Initialize FirebaseDataManager
+        // Initialize com.example.getiproject.database.FirebaseDataManager
         firebaseDataManager = FirebaseDataManager()
 
 
@@ -121,7 +117,7 @@ class MainActivity : ComponentActivity() {
                                 PostDetail(navController, postId ?: "", firebaseDataManager)
                             } else {
                                 // Handle the case where firebaseDataManager is not initialized yet
-                                Log.e("MainActivity", "FirebaseDataManager is not initialized")
+                                Log.e("MainActivity", "com.example.getiproject.database.FirebaseDataManager is not initialized")
                             }
                         }
                         composable(Screen.CreatePostScreen.route) { CreatePostScreen(navController) }
@@ -133,13 +129,10 @@ class MainActivity : ComponentActivity() {
                             if (postId != null) {
                                 EditPostScreen(navController, postId, firebaseDataManager)
                             } else {
-                                // postId가 없을 때의 처리를 추가할 수 있습니다.
-                                // 예를 들어, 에러 처리 또는 다른 화면으로 이동하는 등의 로직을 추가할 수 있습니다.
+                                Log.e("MainActivity", "postId is null")
                             }
                         }
-                        composable(Screen.Asd.route) { Asd(navController) }
                         composable(Screen.UserInfo.route) { UserInfo(navController)}
-                        composable(Screen.Practice.route) { Practice(navController) }
 
                     }
                 }

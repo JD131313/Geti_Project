@@ -20,17 +20,10 @@ fun SuccessLogin(navController: NavController, onSignOutClicked: () -> Unit) {
         }) {
             Text(text = "커뮤니티")
         }
-        Button(onClick = { navController.navigate(Screen.Asd.route)
-        }) {
-            Text(text = "커뮤니티")
-        }
         Button(onClick = { navController.navigate(Screen.UserInfo.route)
         }) {
             Text(text = "유저정보")
         }
-        Button(onClick = { navController.navigate(Screen.Practice.route)
-        }) {
-            Text(text = "유저정보")
-        }
+
     }
 }
